@@ -1,5 +1,7 @@
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://fpf-ollama:11434'
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llava:13b'
+const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
+const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+const GROQ_TEXT_MODEL = 'llama3-8b-8192'
 
 export interface OllamaMessage {
   role: 'user' | 'assistant' | 'system'
@@ -23,6 +25,30 @@ export interface SpeciesIdentification {
   legal_notes: string
 }
 
+async function groqChat(messages: object[], model: string): Promise<string> {
+  const response = await fetch(GROQ_BASE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({ model, messages, temperature: 0.3 }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Groq error: ${response.status} ${err}`)
+  }
+
+  const data = await response.json()
+  return data.choices?.[0]?.message?.content || ''
+}
+
+function extractJSON(text: string): string {
+  const match = text.match(/\[[\s\S]*\]|\{[\s\S]*\}/)
+  return match ? match[0] : text
+}
+
 export async function identifyFromImage(base64Image: string): Promise<SpeciesIdentification[]> {
   const prompt = `You are an expert biologist and veterinarian. Analyze this image and identify the animal or plant shown.
 Return a JSON array with UP TO 3 possible species matches, ordered by confidence. Each object must have:
@@ -42,32 +68,18 @@ Return a JSON array with UP TO 3 possible species matches, ordered by confidence
 
 Respond ONLY with the JSON array, no markdown or explanation.`
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-          images: [base64Image],
-        },
+  const text = await groqChat([
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: prompt },
+        { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
       ],
-      stream: false,
-      format: 'json',
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Ollama error: ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  const text = data.message?.content || '[]'
+    },
+  ], GROQ_VISION_MODEL)
 
   try {
-    const parsed = JSON.parse(text)
+    const parsed = JSON.parse(extractJSON(text))
     return Array.isArray(parsed) ? parsed.slice(0, 3) : [parsed]
   } catch {
     throw new Error('No se pudo parsear la respuesta de la IA')
@@ -94,26 +106,10 @@ Return a JSON array with UP TO 3 species, ordered by relevance. Each object must
 
 Respond ONLY with the JSON array.`
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama3.2',
-      messages: [{ role: 'user', content: prompt }],
-      stream: false,
-      format: 'json',
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Ollama error: ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  const text = data.message?.content || '[]'
+  const text = await groqChat([{ role: 'user', content: prompt }], GROQ_TEXT_MODEL)
 
   try {
-    const parsed = JSON.parse(text)
+    const parsed = JSON.parse(extractJSON(text))
     return Array.isArray(parsed) ? parsed.slice(0, 3) : [parsed]
   } catch {
     throw new Error('No se pudo parsear la respuesta de la IA')
@@ -133,26 +129,10 @@ Return JSON with:
 
 Respond ONLY with the JSON object.`
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama3.2',
-      messages: [{ role: 'user', content: prompt }],
-      stream: false,
-      format: 'json',
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Ollama error: ${response.statusText}`)
-  }
-
-  const data = await response.json()
-  const text = data.message?.content || '{}'
+  const text = await groqChat([{ role: 'user', content: prompt }], GROQ_TEXT_MODEL)
 
   try {
-    return JSON.parse(text)
+    return JSON.parse(extractJSON(text))
   } catch {
     return {
       name: 'Amiguito',
@@ -179,21 +159,10 @@ For animals: include food, water, cleaning reminders.
 For plants: include water, sun, fertilizer reminders.
 Generate 3-5 reminders. Respond ONLY with JSON array.`
 
-  const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'llama3.2',
-      messages: [{ role: 'user', content: prompt }],
-      stream: false,
-      format: 'json',
-    }),
-  })
+  const text = await groqChat([{ role: 'user', content: prompt }], GROQ_TEXT_MODEL)
 
-  if (!response.ok) throw new Error(`Ollama error: ${response.statusText}`)
-  const data = await response.json()
   try {
-    return JSON.parse(data.message?.content || '[]')
+    return JSON.parse(extractJSON(text))
   } catch {
     return []
   }
