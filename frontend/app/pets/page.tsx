@@ -4,8 +4,9 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Bell, Star, Heart, MessageCircle, Search } from 'lucide-react'
+import { Plus, Bell, Star, Heart, MessageCircle, Search, Lock, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth'
 
 interface Reminder {
   id: string
@@ -41,15 +42,38 @@ const reminderIcon: Record<string, string> = {
 }
 
 export default function PetsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [companions, setCompanions] = useState<CompanionData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/virtual-pet?user_id=anonymous')
+    if (authLoading) return
+    if (!user) { setLoading(false); return }
+    fetch(`/api/virtual-pet?user_id=${user.id}`)
       .then(r => r.json())
       .then(data => { setCompanions(data.pets || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [user, authLoading])
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card max-w-md w-full text-center py-12">
+          <div className="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-brand-600" />
+          </div>
+          <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">Área privada</h2>
+          <p className="text-gray-500 mb-6">Necesitas una cuenta para ver tus compañeros virtuales y recordatorios de cuidado.</p>
+          <div className="flex flex-col gap-3">
+            <Link href="/auth" className="btn-primary flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4" /> Crear cuenta gratis
+            </Link>
+            <Link href="/auth" className="btn-secondary text-sm">Ya tengo cuenta — Iniciar sesión</Link>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen py-10 px-4">

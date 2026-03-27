@@ -7,13 +7,14 @@ import { motion } from 'framer-motion'
 import {
   ArrowLeft, Leaf, PawPrint, Clock, MapPin, Utensils,
   Plus, CheckCircle, Globe, Home, BookOpen, Star, Shield,
-  Droplets, Sun, Baby, Volume2, TreePine, Thermometer,
+  Droplets, Sun, Baby, Volume2, TreePine, Thermometer, Lock, Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import WarningBanner from '@/components/WarningBanner'
 import toast from 'react-hot-toast'
 import type { SpeciesDetails } from '@/lib/ollama'
+import { useAuth } from '@/lib/auth'
 
 interface BasicSpecies {
   id: string
@@ -108,6 +109,7 @@ function SkeletonCard() {
 export default function SpeciesDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuth()
   const [species, setSpecies] = useState<BasicSpecies | null>(null)
   const [details, setDetails] = useState<SpeciesDetails | null>(null)
   const [loadingBasic, setLoadingBasic] = useState(true)
@@ -171,7 +173,7 @@ export default function SpeciesDetailPage() {
           species_name: species.common_name,
           species_type: species.type,
           species_scientific: species.scientific_name,
-          user_id: 'anonymous',
+          user_id: user?.id ?? 'anonymous',
           country: (typeof navigator !== 'undefined' ? navigator.language?.split('-')[1] : null) || 'MX',
         }),
       })
@@ -455,19 +457,29 @@ export default function SpeciesDetailPage() {
               <p className="text-gray-600 text-sm mb-4">
                 Basado en {species.common_name}, la IA generará recordatorios de cuidado personalizados.
               </p>
-              <button
-                onClick={() => setShowConfirmModal(true)}
-                disabled={creatingPet || petCreated}
-                className="btn-primary flex items-center gap-2"
-              >
-                {petCreated ? (
-                  <><CheckCircle className="w-4 h-4" /> Mascota creada</>
-                ) : creatingPet ? (
-                  <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Creando...</>
-                ) : (
-                  <><Plus className="w-4 h-4" /> Crear mascota virtual</>
-                )}
-              </button>
+              {user ? (
+                <button
+                  onClick={() => setShowConfirmModal(true)}
+                  disabled={creatingPet || petCreated}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {petCreated ? (
+                    <><CheckCircle className="w-4 h-4" /> Mascota creada</>
+                  ) : creatingPet ? (
+                    <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Creando...</>
+                  ) : (
+                    <><Plus className="w-4 h-4" /> Crear mascota virtual</>
+                  )}
+                </button>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-white/70 rounded-2xl border border-brand-200">
+                  <Lock className="w-4 h-4 text-brand-500 shrink-0" />
+                  <p className="text-sm text-gray-600 flex-1">Necesitas una cuenta para crear mascotas virtuales</p>
+                  <Link href="/auth" className="btn-primary text-sm py-1.5 px-3 flex items-center gap-1 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5" /> Registrarse
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>

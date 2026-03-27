@@ -4,23 +4,27 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, Plus } from 'lucide-react'
+import { Bell, Plus, Lock, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import ReminderCard, { type Reminder } from '@/components/ReminderCard'
+import { useAuth } from '@/lib/auth'
 
 export default function RemindersPage() {
+  const { user, loading: authLoading } = useAuth()
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/reminders?user_id=anonymous')
+    if (authLoading) return
+    if (!user) { setLoading(false); return }
+    fetch(`/api/reminders?user_id=${user.id}`)
       .then(r => r.json())
       .then(data => {
         setReminders(data.reminders || [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [user, authLoading])
 
   const handleToggle = async (id: string) => {
     const reminder = reminders.find(r => r.id === id)
@@ -40,6 +44,26 @@ export default function RemindersPage() {
     acc[key].push(r)
     return acc
   }, {})
+
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card max-w-md w-full text-center py-12">
+          <div className="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-brand-600" />
+          </div>
+          <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">Área privada</h2>
+          <p className="text-gray-500 mb-6">Inicia sesión para ver y gestionar tus recordatorios de cuidado.</p>
+          <div className="flex flex-col gap-3">
+            <Link href="/auth" className="btn-primary flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4" /> Crear cuenta gratis
+            </Link>
+            <Link href="/auth" className="btn-secondary text-sm">Ya tengo cuenta — Iniciar sesión</Link>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen py-10 px-4">
