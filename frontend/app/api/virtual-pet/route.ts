@@ -35,19 +35,19 @@ export async function POST(req: NextRequest) {
     const finalName: string = dbSpecies?.common_name ?? species_name
     const finalType: 'animal' | 'plant' = (dbSpecies?.type as 'animal' | 'plant') ?? species_type
 
-    // Ensure species exists so the FK constraint passes
-    if (!dbSpecies) {
-      await supabase.from('species').upsert({
-        id: finalId,
-        common_name: finalName,
-        scientific_name: species_scientific || finalName,
-        type: finalType,
-        safety_level: 'safe',
-        is_legal: true,
-        is_domestic: finalType === 'animal',
-        short_desc: `${finalName} — creado desde ficha educativa`,
-      }, { onConflict: 'id' })
-    }
+    // Ensure species exists so the FK constraint passes.
+    // ignoreDuplicates:true → INSERT...ON CONFLICT DO NOTHING (only needs INSERT policy, not UPDATE)
+    const { error: upsertErr } = await supabase.from('species').upsert({
+      id: finalId,
+      common_name: finalName,
+      scientific_name: species_scientific || finalName,
+      type: finalType,
+      safety_level: 'safe',
+      is_legal: true,
+      is_domestic: finalType === 'animal',
+      short_desc: `${finalName} — creado desde ficha educativa`,
+    }, { onConflict: 'id', ignoreDuplicates: true })
+    if (upsertErr) console.error('[virtual-pet] species upsert:', upsertErr.message)
 
     const petData = await generateVirtualPetName(finalName, finalType)
     const season = getSeason(country)
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     if (petError || !pet) {
       console.error('[virtual-pet] insert error:', petError)
-      return NextResponse.json({ error: 'Error creando mascota virtual' }, { status: 500 })
+      return NextResponse.json({ error: `Error guardando compañero: ${petError?.message ?? 'desconocido'}` }, { status: 500 })
     }
 
     const reminderTemplates = await generateCareReminders(
