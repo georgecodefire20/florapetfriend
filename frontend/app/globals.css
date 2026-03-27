@@ -11,7 +11,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    box-sizing: border-box;
   }
   body {
     @apply bg-hero-gradient font-sans text-gray-800 antialiased;
