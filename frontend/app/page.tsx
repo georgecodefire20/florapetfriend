@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Leaf, PawPrint, Sparkles, Camera, Search, ArrowRight, Shield, Clock, Globe } from 'lucide-react'
