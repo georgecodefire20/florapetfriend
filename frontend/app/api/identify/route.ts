@@ -4,21 +4,39 @@ import { supabase } from '@/lib/supabase'
 import { slugify } from '@/lib/utils'
 
 async function fetchWikipediaImage(scientificName: string, commonName: string): Promise<string | null> {
-  const tryFetch = async (title: string) => {
+  const tryRestSummary = async (title: string) => {
     try {
-      const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=500&origin=*`
-      const res = await fetch(url)
+      const slug = encodeURIComponent(title.trim().replace(/ /g, '_'))
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${slug}`, {
+        headers: { 'User-Agent': 'FloraPetFriend/1.0' },
+      })
       if (!res.ok) return null
       const data = await res.json()
-      const pages = data?.query?.pages ?? {}
-      const page = Object.values(pages)[0] as { thumbnail?: { source: string } }
-      return page?.thumbnail?.source ?? null
+      return (data?.thumbnail?.source as string) ?? null
     } catch {
       return null
     }
   }
 
-  return (await tryFetch(scientificName)) ?? (await tryFetch(commonName))
+  const trySearch = async (query: string) => {
+    try {
+      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`
+      const res = await fetch(url)
+      if (!res.ok) return null
+      const data = await res.json()
+      const title: string | undefined = data?.query?.search?.[0]?.title
+      if (!title) return null
+      return tryRestSummary(title)
+    } catch {
+      return null
+    }
+  }
+
+  return (
+    (await tryRestSummary(scientificName)) ??
+    (await trySearch(scientificName)) ??
+    (await trySearch(commonName))
+  )
 }
 
 export async function POST(req: NextRequest) {
