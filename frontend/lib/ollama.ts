@@ -1,7 +1,7 @@
 const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
-const GROQ_TEXT_MODEL = 'llama3-8b-8192'
+const GROQ_TEXT_MODEL = 'llama-3.1-8b-instant'
 
 export interface OllamaMessage {
   role: 'user' | 'assistant' | 'system'

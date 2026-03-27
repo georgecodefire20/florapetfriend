@@ -44,7 +44,7 @@ interface SpeciesCardProps {
 }
 
 export default function SpeciesCard({ species, index = 0 }: SpeciesCardProps) {
-  const safety = safetyConfig[species.safety_level]
+  const safety = safetyConfig[species.safety_level] ?? safetyConfig['safe']
 
   return (
     <motion.div
@@ -71,7 +71,7 @@ export default function SpeciesCard({ species, index = 0 }: SpeciesCardProps) {
 
         {/* Confidence badge */}
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 text-xs font-bold text-gray-700">
-          {Math.round(species.confidence * 100)}% match
+          {Math.round((species.confidence ?? 0.8) * 100)}% match
         </div>
 
         {/* Type badge */}
