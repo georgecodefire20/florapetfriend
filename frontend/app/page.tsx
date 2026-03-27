@@ -97,10 +97,10 @@ export default function HomePage() {
               className="btn-primary text-lg flex items-center gap-2 justify-center"
             >
               <Sparkles className="w-5 h-5" />
-              Identificar ahora
+              Pruébalo ahora
             </button>
-            <Link href="/explore" className="btn-secondary text-lg flex items-center gap-2 justify-center">
-              Explorar especies
+            <Link href="/auth" className="btn-secondary text-lg flex items-center gap-2 justify-center">
+              Crear cuenta gratis
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -183,16 +183,25 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-20 px-4 text-center">
-        <div className="max-w-2xl mx-auto card">
-          <div className="text-5xl mb-4">🐾🌿</div>
-          <h2 className="section-title mb-4">Empieza ahora, es gratis</h2>
-          <p className="text-gray-500 mb-8">
-            Sin registros complicados. Sube tu primera foto y descubre el mundo animal y vegetal.
-          </p>
-          <Link href="/identify" className="btn-primary text-lg inline-flex items-center gap-2">
-            <Leaf className="w-5 h-5" />
-            Comenzar identificación
-          </Link>
+        <div className="max-w-2xl mx-auto">
+          <div className="card bg-gradient-to-br from-brand-500 to-brand-600 text-white mb-6">
+            <div className="text-5xl mb-4">🐾🌿</div>
+            <h2 className="text-3xl font-display font-bold mb-4">¿Listo para descubrir el mundo animal y vegetal?</h2>
+            <p className="text-brand-100 mb-8 text-lg">
+              Crea tu cuenta gratis y empieza a identificar, aprender y cuidar.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/auth" className="bg-white text-brand-600 font-bold py-3 px-6 rounded-2xl hover:bg-brand-50 transition-colors flex items-center gap-2 justify-center">
+                <Sparkles className="w-5 h-5" />
+                Crear cuenta gratis
+              </Link>
+              <Link href="/identify" className="border-2 border-white/40 text-white font-bold py-3 px-6 rounded-2xl hover:bg-white/10 transition-colors flex items-center gap-2 justify-center">
+                <Leaf className="w-5 h-5" />
+                Probar sin cuenta
+              </Link>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400">Acceso rápido demo: <strong>demo@florapetfriend.site</strong> / <strong>demo1234</strong></p>
         </div>
       </section>
 

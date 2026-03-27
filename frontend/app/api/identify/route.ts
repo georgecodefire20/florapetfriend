@@ -43,10 +43,13 @@ export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get('content-type') || ''
     let results
+    let queryText = ''
+    let userId = 'anonymous'
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData()
       const imageFile = formData.get('image') as File
+      userId = (formData.get('user_id') as string) || 'anonymous'
       if (!imageFile) {
         return NextResponse.json({ error: 'No se encontró imagen' }, { status: 400 })
       }
@@ -56,7 +59,9 @@ export async function POST(req: NextRequest) {
       results = await identifyFromImage(base64)
     } else {
       const body = await req.json()
-      const { query } = body
+      const { query, user_id } = body
+      queryText = query || ''
+      userId = user_id || 'anonymous'
       if (!query?.trim()) {
         return NextResponse.json({ error: 'Query vacío' }, { status: 400 })
       }
@@ -86,6 +91,15 @@ export async function POST(req: NextRequest) {
       })
 
       savedResults.push({ ...r, id, image_url })
+    }
+
+    if (savedResults.length > 0) {
+      await supabase.from('search_history').insert({
+        user_id: userId,
+        query: queryText || null,
+        result_name: savedResults[0].common_name,
+        result_type: savedResults[0].type,
+      }).then(() => null)
     }
 
     return NextResponse.json({ results: savedResults })
