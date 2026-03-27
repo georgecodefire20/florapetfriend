@@ -114,6 +114,7 @@ export default function SpeciesDetailPage() {
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [creatingPet, setCreatingPet] = useState(false)
   const [petCreated, setPetCreated] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -159,18 +160,26 @@ export default function SpeciesDetailPage() {
 
   const handleCreatePet = async () => {
     if (!species) return
+    setShowConfirmModal(false)
     setCreatingPet(true)
     try {
       const res = await fetch('/api/virtual-pet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ species_id: species.id, user_id: 'anonymous', country: navigator.language?.split('-')[1] || 'ES' }),
+        body: JSON.stringify({
+          species_id: species.id,
+          species_name: species.common_name,
+          species_type: species.type,
+          species_scientific: species.scientific_name,
+          user_id: 'anonymous',
+          country: (typeof navigator !== 'undefined' ? navigator.language?.split('-')[1] : null) || 'MX',
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       toast.success(`¡${data.pet.name} ha sido creado! 🎉`)
       setPetCreated(true)
-      setTimeout(() => router.push('/pets'), 1500)
+      setTimeout(() => router.push('/pets'), 1800)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Error creando mascota')
     } finally {
@@ -447,7 +456,7 @@ export default function SpeciesDetailPage() {
                 Basado en {species.common_name}, la IA generará recordatorios de cuidado personalizados.
               </p>
               <button
-                onClick={handleCreatePet}
+                onClick={() => setShowConfirmModal(true)}
                 disabled={creatingPet || petCreated}
                 className="btn-primary flex items-center gap-2"
               >
@@ -463,6 +472,42 @@ export default function SpeciesDetailPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* ── Confirmation Modal ── */}
+      {showConfirmModal && species && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="card max-w-sm w-full text-center shadow-2xl"
+          >
+            <div className="text-6xl mb-3">🌟</div>
+            <h2 className="font-display font-bold text-xl text-gray-900 mb-2">Crear compañero virtual</h2>
+            <p className="text-gray-500 text-sm mb-1">
+              Crearemos un pequeño compañero basado en
+            </p>
+            <p className="font-semibold text-brand-600 mb-3">{species.common_name}</p>
+            <p className="text-gray-400 text-xs mb-6">
+              La IA generará un nombre, personalidad y recordatorios de cuidado personalizados para ti.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreatePet}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Crear compañero
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

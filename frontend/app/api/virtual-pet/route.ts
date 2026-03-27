@@ -5,30 +5,58 @@ import { getSeason } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   try {
-    const { species_id, user_id, country = 'ES' } = await req.json()
+    const {
+      species_id,
+      species_name,
+      species_type = 'animal',
+      species_scientific,
+      user_id,
+      country = 'MX',
+    } = await req.json()
 
-    if (!species_id || !user_id) {
-      return NextResponse.json({ error: 'species_id y user_id son requeridos' }, { status: 400 })
+    if (!user_id) {
+      return NextResponse.json({ error: 'user_id es requerido' }, { status: 400 })
+    }
+    if (!species_name) {
+      return NextResponse.json({ error: 'species_name es requerido' }, { status: 400 })
     }
 
-    const { data: species, error: speciesError } = await supabase
+    // Build the species ID — prefer the one from the identify flow, fallback to slug
+    const finalId: string = species_id ||
+      species_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+
+    // Try to read existing species from DB
+    const { data: dbSpecies } = await supabase
       .from('species')
-      .select('*')
-      .eq('id', species_id)
+      .select('common_name, type')
+      .eq('id', finalId)
       .single()
 
-    if (speciesError || !species) {
-      return NextResponse.json({ error: 'Especie no encontrada' }, { status: 404 })
+    const finalName: string = dbSpecies?.common_name ?? species_name
+    const finalType: 'animal' | 'plant' = (dbSpecies?.type as 'animal' | 'plant') ?? species_type
+
+    // Ensure species exists so the FK constraint passes
+    if (!dbSpecies) {
+      await supabase.from('species').upsert({
+        id: finalId,
+        common_name: finalName,
+        scientific_name: species_scientific || finalName,
+        type: finalType,
+        safety_level: 'safe',
+        is_legal: true,
+        is_domestic: finalType === 'animal',
+        short_desc: `${finalName} — creado desde ficha educativa`,
+      }, { onConflict: 'id' })
     }
 
-    const petData = await generateVirtualPetName(species.common_name, species.type)
+    const petData = await generateVirtualPetName(finalName, finalType)
     const season = getSeason(country)
 
     const { data: pet, error: petError } = await supabase
       .from('virtual_pets')
       .insert({
         user_id,
-        species_id,
+        species_id: finalId,
         name: petData.name,
         personality: petData.personality,
         message: petData.message,
@@ -39,12 +67,13 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (petError || !pet) {
+      console.error('[virtual-pet] insert error:', petError)
       return NextResponse.json({ error: 'Error creando mascota virtual' }, { status: 500 })
     }
 
     const reminderTemplates = await generateCareReminders(
-      species.common_name,
-      species.type,
+      finalName,
+      finalType,
       country,
       season
     )
@@ -63,7 +92,7 @@ export async function POST(req: NextRequest) {
       await supabase.from('reminders').insert(remindersToInsert)
     }
 
-    return NextResponse.json({ pet, reminders: remindersToInsert })
+    return NextResponse.json({ pet: { ...pet, species_name: finalName }, reminders: remindersToInsert })
   } catch (err: unknown) {
     console.error('[virtual-pet]', err)
     const msg = err instanceof Error ? err.message : 'Error interno'
