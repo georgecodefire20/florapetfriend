@@ -30,6 +30,7 @@ function ResultsContent() {
           setResults(filtered)
           setLoading(false)
           sessionStorage.removeItem('identify_results')
+          filtered.forEach(r => sessionStorage.setItem(`species_basic_${r.id}`, JSON.stringify(r)))
           return
         }
       } catch {}
@@ -40,7 +41,9 @@ function ResultsContent() {
         const fetched = await Promise.all(
           ids.map(id => fetch(`/api/species/${id}`).then(r => r.ok ? r.json() : null))
         )
-        setResults(fetched.filter((r): r is SpeciesResult => r !== null && r.id != null))
+        const valid = fetched.filter((r): r is SpeciesResult => r !== null && r.id != null)
+        setResults(valid)
+        valid.forEach(r => sessionStorage.setItem(`species_basic_${r.id}`, JSON.stringify(r)))
       } catch {
         router.push('/identify')
       } finally {
