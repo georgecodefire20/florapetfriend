@@ -1,0 +1,122 @@
+{
+  "name": "FloraPetFriend — Daily Reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT r.*, vp.name as pet_name, s.common_name as species_name, r.user_id FROM reminders r JOIN virtual_pets vp ON r.pet_id = vp.id JOIN species s ON vp.species_id = s.id WHERE r.active = true AND r.time = to_char(NOW() AT TIME ZONE 'UTC', 'HH24:MI')",
+        "options": {}
+      },
+      "name": "Get Due Reminders",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": { "name": "Supabase PostgreSQL" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.length }}",
+              "operation": "notEqual",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Has Reminders?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Split Reminders",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_URL }}/notify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "user_id", "value": "={{ $json.user_id }}" },
+            { "name": "pet_name", "value": "={{ $json.pet_name }}" },
+            { "name": "label", "value": "={{ $json.label }}" },
+            { "name": "type", "value": "={{ $json.type }}" },
+            { "name": "species", "value": "={{ $json.species_name }}" }
+          ]
+        }
+      },
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "notify",
+        "options": {}
+      },
+      "name": "Notification Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 600],
+      "webhookId": "fpf-notify"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"received\": true, \"pet\": $json.pet_name, \"label\": $json.label } }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 600]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Get Due Reminders", "type": "main", "index": 0 }]]
+    },
+    "Get Due Reminders": {
+      "main": [[{ "node": "Has Reminders?", "type": "main", "index": 0 }]]
+    },
+    "Has Reminders?": {
+      "main": [
+        [{ "node": "Split Reminders", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Split Reminders": {
+      "main": [[{ "node": "Send Notification", "type": "main", "index": 0 }]]
+    },
+    "Notification Webhook": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": ["florapetfriend", "reminders"]
+}

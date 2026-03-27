@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/.vercel
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+frontend/.env.local
+docker/.env
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes (local dev)
+docker/volumes/
+
+# MinIO local data
+minio_data/
+
+# Ollama models (large, don't commit)
+ollama_data/
+
+# TypeScript
+*.tsbuildinfo
