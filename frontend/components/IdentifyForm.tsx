@@ -73,6 +73,9 @@ export default function IdentifyForm() {
       }
 
       const data = await res.json()
+      if (data.results?.length) {
+        sessionStorage.setItem('identify_results', JSON.stringify(data.results))
+      }
       const ids = data.results?.map((r: { id: string }) => r.id).join(',')
       router.push(`/identify/results?ids=${ids}&mode=${mode}`)
     } catch (err: unknown) {

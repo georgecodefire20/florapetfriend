@@ -20,12 +20,27 @@ function ResultsContent() {
 
   useEffect(() => {
     if (!ids.length) { router.push('/identify'); return }
+
+    const cached = sessionStorage.getItem('identify_results')
+    if (cached) {
+      try {
+        const parsed: SpeciesResult[] = JSON.parse(cached)
+        const filtered = parsed.filter(r => r && r.id && r.common_name)
+        if (filtered.length > 0) {
+          setResults(filtered)
+          setLoading(false)
+          sessionStorage.removeItem('identify_results')
+          return
+        }
+      } catch {}
+    }
+
     const fetchSpecies = async () => {
       try {
         const fetched = await Promise.all(
-          ids.map(id => fetch(`/api/species/${id}`).then(r => r.json()))
+          ids.map(id => fetch(`/api/species/${id}`).then(r => r.ok ? r.json() : null))
         )
-        setResults(fetched.filter(Boolean))
+        setResults(fetched.filter((r): r is SpeciesResult => r !== null && r.id != null))
       } catch {
         router.push('/identify')
       } finally {
