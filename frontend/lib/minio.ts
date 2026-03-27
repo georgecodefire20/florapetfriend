@@ -27,7 +27,7 @@ export async function uploadToMinio(
       'Content-Type': contentType,
       Authorization: authHeader,
     },
-    body: buffer,
+    body: new Uint8Array(buffer),
   })
 
   if (!response.ok) {

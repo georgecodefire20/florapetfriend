@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const uploadRes = await fetch(uploadUrl, {
       method: 'PUT',
       headers: { 'Content-Type': file.type || 'image/jpeg' },
-      body: buffer,
+      body: new Uint8Array(buffer),
     })
 
     if (!uploadRes.ok) {
