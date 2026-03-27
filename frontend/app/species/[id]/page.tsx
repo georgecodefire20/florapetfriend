@@ -68,6 +68,24 @@ function SectionCard({ title, icon, children, delay = 0, color = 'bg-brand-100 t
   )
 }
 
+const difficultyColor: Record<string, string> = {
+  fácil: 'bg-green-100 text-green-700',
+  moderado: 'bg-yellow-100 text-yellow-700',
+  difícil: 'bg-orange-100 text-orange-700',
+  experto: 'bg-red-100 text-red-700',
+}
+
+function QuickStat({ icon, label, value, color }: { icon: ReactNode; label: string; value: string | null | undefined; color: string }) {
+  if (!value) return null
+  return (
+    <div className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>{icon}</div>
+      <span className="text-xs text-gray-400 leading-none">{label}</span>
+      <span className="text-sm font-semibold text-gray-800 leading-tight">{value}</span>
+    </div>
+  )
+}
+
 function SkeletonCard() {
   return (
     <div className="card mb-5 animate-pulse">
@@ -232,6 +250,34 @@ export default function SpeciesDetailPage() {
             <p className="text-gray-600">{details?.short_desc || species.short_desc}</p>
           </div>
         </motion.div>
+
+        {/* Quick Stats */}
+        {details && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mb-6"
+          >
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-2 ml-1">Datos clave</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <QuickStat icon={<Clock className="w-4 h-4" />} label="Esperanza de vida" value={details.lifespan} color="bg-teal-100 text-teal-600" />
+              <div className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-pink-100 text-pink-600">
+                  <Star className="w-4 h-4" />
+                </div>
+                <span className="text-xs text-gray-400 leading-none">Dificultad</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${difficultyColor[details.care_difficulty?.toLowerCase()] ?? 'bg-gray-100 text-gray-700'}`}>
+                  {details.care_difficulty}
+                </span>
+              </div>
+              <QuickStat icon={<Thermometer className="w-4 h-4" />} label="Temperatura" value={details.ideal_temperature} color="bg-orange-100 text-orange-600" />
+              <QuickStat icon={<Globe className="w-4 h-4" />} label="Origen" value={details.geographic_origin} color="bg-blue-100 text-blue-600" />
+              <QuickStat icon={<Utensils className="w-4 h-4" />} label="Dieta" value={details.diet} color="bg-amber-100 text-amber-600" />
+              <QuickStat icon={<Home className="w-4 h-4" />} label="En casa" value={details.is_domestic ? '🏠 Doméstico' : '🌿 Silvestre'} color="bg-purple-100 text-purple-600" />
+            </div>
+          </motion.div>
+        )}
 
         {/* ✔️ ¿Es buena idea tenerlo en casa? */}
         <motion.div
