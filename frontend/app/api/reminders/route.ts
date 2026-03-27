@@ -18,7 +18,11 @@ export async function GET(req: NextRequest) {
       .order('time', { ascending: true })
 
     if (error) throw error
-    return NextResponse.json({ reminders: data })
+    const mapped = (data || []).map((r: Record<string, unknown>) => {
+      const vp = r.virtual_pets as { name?: string } | null
+      return { ...r, pet_name: vp?.name ?? null, virtual_pets: undefined }
+    })
+    return NextResponse.json({ reminders: mapped })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Error interno'
     return NextResponse.json({ error: msg }, { status: 500 })

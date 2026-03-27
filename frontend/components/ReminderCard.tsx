@@ -12,6 +12,7 @@ export interface Reminder {
   label: string
   time: string
   frequency: string
+  active?: boolean
   done?: boolean
   pet_name?: string
 }
@@ -31,7 +32,7 @@ interface ReminderCardProps {
 }
 
 export default function ReminderCard({ reminder, onToggle, index = 0 }: ReminderCardProps) {
-  const [done, setDone] = useState(reminder.done ?? false)
+  const [done, setDone] = useState(reminder.done ?? !(reminder.active ?? true))
   const ic = iconMap[reminder.type]
 
   const handleToggle = () => {

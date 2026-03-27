@@ -25,10 +25,12 @@ export default function RemindersPage() {
   const handleToggle = async (id: string) => {
     const reminder = reminders.find(r => r.id === id)
     if (!reminder) return
+    const newActive = !(reminder.active ?? true)
+    setReminders(prev => prev.map(r => r.id === id ? { ...r, active: newActive } : r))
     await fetch('/api/reminders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, active: !reminder.done }),
+      body: JSON.stringify({ id, active: newActive }),
     })
   }
 
