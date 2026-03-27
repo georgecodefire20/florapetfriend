@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -8,11 +6,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export function createSupabaseServerClient() {
-  return createServerComponentClient({ cookies })
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey
+  return createClient(supabaseUrl, serviceKey)
 }
 
 export function createSupabaseBrowserClient() {
-  return createClientComponentClient()
+  return createClient(supabaseUrl, supabaseAnonKey)
 }
 
 export type Database = {
