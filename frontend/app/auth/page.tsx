@@ -49,7 +49,14 @@ export default function AuthPage() {
 
   const quickLogin = async (creds: typeof DEMO_USER) => {
     setLoading(true)
-    const { error } = await signIn(creds.email, creds.password)
+    let { error } = await signIn(creds.email, creds.password)
+    if (error && error.toLowerCase().includes('invalid')) {
+      const name = creds.email.includes('admin') ? 'Administrador' : 'Usuario Demo'
+      const { error: signUpError } = await signUp(creds.email, creds.password, name, 'MX')
+      if (signUpError) { setLoading(false); toast.error(signUpError); return }
+      const { error: loginError } = await signIn(creds.email, creds.password)
+      error = loginError
+    }
     setLoading(false)
     if (error) { toast.error(error); return }
     toast.success(`Sesión iniciada como ${creds.label}`)
