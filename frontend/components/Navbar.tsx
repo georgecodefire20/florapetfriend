@@ -25,6 +25,8 @@ export default function Navbar() {
     router.push('/')
   }
 
+  if (pathname?.startsWith('/admin')) return null
+
   return (
     <header className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
