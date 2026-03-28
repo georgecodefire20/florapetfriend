@@ -376,9 +376,21 @@ function PetCard({ pet: init }: { pet: Pet }) {
                   <XCircle className="w-12 h-12 text-red-500" />
                 </div>
               )}
-              <div className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
-                {pet.level}
-              </div>
+              {activeRem.length > 0 ? (
+                activeRem.filter(r => !r.completed).length > 0 ? (
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
+                    {activeRem.filter(r => !r.completed).length}
+                  </div>
+                ) : (
+                  <div className="absolute -top-2 -right-2 bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                )
+              ) : (
+                <div className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
+                  {pet.level}
+                </div>
+              )}
             </motion.div>
 
             {/* Edit image on hover */}
