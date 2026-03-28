@@ -220,10 +220,10 @@ export default function SpeciesDetailPage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link href="/identify" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-800 mb-6 transition-colors">
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-800 mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Volver
-        </Link>
+        </button>
 
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card mb-6 overflow-hidden p-0">
