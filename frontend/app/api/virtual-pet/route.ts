@@ -125,12 +125,16 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { pet_id, avatar_url } = await req.json()
+    const { pet_id, avatar_url, name } = await req.json()
     if (!pet_id) return NextResponse.json({ error: 'pet_id requerido' }, { status: 400 })
+
+    const updates: Record<string, unknown> = {}
+    if (avatar_url !== undefined) updates.avatar_url = avatar_url
+    if (name !== undefined) updates.name = name.toString().trim().slice(0, 60)
 
     const { error } = await supabase
       .from('virtual_pets')
-      .update({ avatar_url })
+      .update(updates)
       .eq('id', pet_id)
 
     if (error) throw error

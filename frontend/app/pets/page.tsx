@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Lock, Sparkles, Camera, Wand2, Upload,
   X, CheckCircle, XCircle, ChevronDown, ChevronUp, Loader2,
+  Pencil, PawPrint, Leaf,
 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -284,7 +285,28 @@ function PetCard({ pet: init }: { pet: Pet }) {
   const [pet, setPet] = useState(init)
   const [showImgModal, setShowImgModal] = useState(false)
   const [freqTab, setFreqTab] = useState<'daily' | 'weekly' | 'monthly'>('daily')
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(init.name)
+
+  const saveName = async () => {
+    const trimmed = nameInput.trim()
+    if (!trimmed) { setNameInput(pet.name); setEditingName(false); return }
+    if (trimmed === pet.name) { setEditingName(false); return }
+    const res = await fetch('/api/virtual-pet', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pet_id: pet.id, name: trimmed }),
+    })
+    if (res.ok) {
+      setPet(prev => ({ ...prev, name: trimmed }))
+      toast.success('Nombre actualizado')
+    } else {
+      toast.error('Error al actualizar nombre')
+      setNameInput(pet.name)
+    }
+    setEditingName(false)
+  }
 
   const health = computeHealth(pet)
   const activeRem = (pet.reminders || []).filter(r => r.active)
@@ -362,8 +384,32 @@ function PetCard({ pet: init }: { pet: Pet }) {
           <div className="flex-1 min-w-0 pt-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="text-xl font-display font-bold text-gray-900 truncate">{pet.name}</h2>
-                <p className="text-sm text-gray-400">{pet.species?.common_name}</p>
+                <div className="flex items-center gap-1 min-w-0">
+                  {editingName ? (
+                    <input
+                      value={nameInput}
+                      onChange={e => setNameInput(e.target.value)}
+                      onBlur={saveName}
+                      onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setEditingName(false); setNameInput(pet.name) } }}
+                      autoFocus
+                      maxLength={60}
+                      className="text-xl font-display font-bold text-gray-900 border-b-2 border-brand-400 bg-transparent focus:outline-none min-w-0 w-full"
+                    />
+                  ) : (
+                    <>
+                      <h2 className="text-xl font-display font-bold text-gray-900 truncate">{pet.name}</h2>
+                      <button onClick={() => { setEditingName(true); setNameInput(pet.name) }} className="p-1 text-gray-300 hover:text-brand-500 transition-colors flex-shrink-0" title="Editar nombre">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400 flex items-center gap-1">
+                  {pet.species?.type === 'plant'
+                    ? <Leaf className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                    : <PawPrint className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
+                  {pet.species?.common_name}
+                </p>
                 {pet.personality && <p className="text-xs text-gray-500 italic mt-0.5">{pet.personality}</p>}
               </div>
               <button onClick={() => setExpanded(!expanded)} className="p-1.5 hover:bg-gray-100 rounded-xl text-gray-400 flex-shrink-0">
@@ -406,6 +452,7 @@ function PetCard({ pet: init }: { pet: Pet }) {
                   <div className="flex gap-1.5 mb-3 flex-wrap">
                     {(['daily', 'weekly', 'monthly'] as const).map(f => {
                       const pending = grouped[f].filter(r => !r.completed).length
+                      const hasRems = grouped[f].length > 0
                       return (
                         <button key={f} onClick={() => setFreqTab(f)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
@@ -413,10 +460,18 @@ function PetCard({ pet: init }: { pet: Pet }) {
                           }`}
                         >
                           {FREQ_LABELS[f]}
-                          {pending > 0 && (
-                            <span className={`text-xs rounded-full px-1.5 py-0.5 font-bold leading-none ${freqTab === f ? 'bg-white/30 text-white' : 'bg-brand-100 text-brand-600'}`}>
-                              {pending}
-                            </span>
+                          {hasRems && (
+                            pending > 0 ? (
+                              <span className={`text-xs rounded-full px-1.5 py-0.5 font-bold leading-none ${
+                                freqTab === f ? 'bg-white/30 text-white' : 'bg-red-100 text-red-600'
+                              }`}>
+                                {pending}
+                              </span>
+                            ) : (
+                              <CheckCircle className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                freqTab === f ? 'text-white/80' : 'text-green-500'
+                              }`} />
+                            )
                           )}
                         </button>
                       )

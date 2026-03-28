@@ -39,10 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabaseBrowser.auth.getSession().then(({ data: { session } }) => {
+    supabaseBrowser.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) fetchRole(session.user.id).then(setRole)
+      if (session?.user) {
+        const r = await fetchRole(session.user.id)
+        setRole(r)
+      }
       setLoading(false)
     })
 

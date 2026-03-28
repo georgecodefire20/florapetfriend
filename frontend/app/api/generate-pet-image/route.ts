@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     const encoded = encodeURIComponent(safePrompt)
     const seed = Math.floor(Math.random() * 99999)
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=400&nologo=true&seed=${seed}`
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=400&seed=${seed}&model=flux&enhance=false`
 
     // Fetch server-side with manual AbortController (Node 14+ compatible)
     const controller = new AbortController()

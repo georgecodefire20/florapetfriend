@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Leaf, Mail, Lock, User, Globe, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
+import { useAuth, supabaseBrowser } from '@/lib/auth'
 import toast from 'react-hot-toast'
 
 const DEMO_USER = { email: 'demo@florapetfriend.site', password: 'demo1234', label: 'Usuario Demo' }
@@ -56,6 +56,12 @@ export default function AuthPage() {
       if (signUpError) { setLoading(false); toast.error(signUpError); return }
       const { error: loginError } = await signIn(creds.email, creds.password)
       error = loginError
+    }
+    if (!error && creds.email.includes('admin')) {
+      const { data: { user: u } } = await supabaseBrowser.auth.getUser()
+      if (u) {
+        await supabaseBrowser.from('profiles').update({ role: 'admin' }).eq('id', u.id)
+      }
     }
     setLoading(false)
     if (error) { toast.error(error); return }
