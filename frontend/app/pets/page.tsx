@@ -116,7 +116,6 @@ function ImageModal({ pet, onClose, onSaved }: {
   const [preview, setPreview] = useState<string | null>(pet.avatar_url)
   const [aiPrompt, setAiPrompt] = useState('')
   const [generating, setGenerating] = useState(false)
-  const [imgLoading, setImgLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -139,10 +138,9 @@ function ImageModal({ pet, onClose, onSaved }: {
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error); return }
-      setImgLoading(true)
       setPreview(data.imageUrl)
     } catch {
-      toast.error('Error generando imagen')
+      toast.error('Error generando imagen. Intenta de nuevo.')
     } finally {
       setGenerating(false)
     }
@@ -193,10 +191,21 @@ function ImageModal({ pet, onClose, onSaved }: {
           ))}
         </div>
 
-        {preview && (
-          <div className="mb-4 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center h-48 relative">
-            {imgLoading && <div className="absolute inset-0 flex items-center justify-center bg-gray-100"><Loader2 className="w-8 h-8 text-brand-400 animate-spin" /></div>}
-            <img src={preview} alt="Preview" className="h-full w-full object-contain" onLoad={() => setImgLoading(false)} />
+        {(preview || generating) && (
+          <div className="mb-4 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center h-48">
+            {generating ? (
+              <div className="flex flex-col items-center gap-2 text-gray-500">
+                <Loader2 className="w-10 h-10 text-brand-400 animate-spin" />
+                <p className="text-xs font-medium">Generando imagen con IA...</p>
+              </div>
+            ) : (
+              <img
+                src={preview!}
+                alt="Preview"
+                className="h-full w-full object-contain"
+                onError={() => { setPreview(null); toast.error('No se pudo cargar la imagen. Intenta de nuevo.') }}
+              />
+            )}
           </div>
         )}
 
@@ -230,7 +239,7 @@ function ImageModal({ pet, onClose, onSaved }: {
         )}
 
         {preview && (
-          <button onClick={handleSave} disabled={saving || imgLoading}
+          <button onClick={handleSave} disabled={saving || generating}
             className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
           >
             {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</> : <><CheckCircle className="w-4 h-4" />Guardar imagen</>}
