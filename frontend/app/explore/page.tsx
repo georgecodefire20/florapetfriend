@@ -1,7 +1,5 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Leaf, PawPrint, Filter } from 'lucide-react'
@@ -15,6 +13,7 @@ export default function ExplorePage() {
   const [filter, setFilter] = useState<'all' | 'animal' | 'plant'>('all')
 
   useEffect(() => {
+    setLoading(true)
     const fetchSpecies = async () => {
       let query = supabase.from('species').select('*').order('common_name')
       if (filter !== 'all') query = query.eq('type', filter)

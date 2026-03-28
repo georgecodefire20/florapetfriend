@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, CheckCircle, Info, ArrowRight, Leaf, PawPrint } from 'lucide-react'
 import Link from 'next/link'
@@ -46,6 +47,7 @@ interface SpeciesCardProps {
 
 export default function SpeciesCard({ species, index = 0, priority }: SpeciesCardProps) {
   const safety = safetyConfig[species.safety_level] ?? safetyConfig['safe']
+  const [imgError, setImgError] = useState(false)
 
   return (
     <motion.div
@@ -56,15 +58,17 @@ export default function SpeciesCard({ species, index = 0, priority }: SpeciesCar
     >
       {/* Image */}
       <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-4 bg-gray-100">
-        {species.image_url ? (
+        {species.image_url && !imgError ? (
           <Image
             src={species.image_url}
             alt={species.common_name}
             fill
+            unoptimized
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
             priority={priority ?? index < 3}
             loading={priority ?? index < 3 ? 'eager' : 'lazy'}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">
