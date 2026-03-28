@@ -39,7 +39,14 @@ export async function POST(req: NextRequest) {
     const timer = setTimeout(() => controller.abort(), 35_000)
     let imgRes: Response
     try {
-      imgRes = await fetch(pollinationsUrl, { signal: controller.signal })
+      imgRes = await fetch(pollinationsUrl, {
+        signal: controller.signal,
+        headers: {
+          'Referer': 'https://florapetfriend.site',
+          'Origin': 'https://florapetfriend.site',
+          'User-Agent': 'Mozilla/5.0 (compatible; FloraPetFriend/1.0)',
+        },
+      })
     } catch (fetchErr: unknown) {
       clearTimeout(timer)
       const msg = fetchErr instanceof Error && fetchErr.name === 'AbortError'
