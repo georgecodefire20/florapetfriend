@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Lock, Sparkles, Camera, Wand2, Upload,
   X, CheckCircle, XCircle, ChevronDown, ChevronUp, Loader2,
-  Pencil, PawPrint, Leaf,
+  Pencil, PawPrint, Leaf, ExternalLink,
 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -29,6 +29,7 @@ interface Reminder {
 
 interface Pet {
   id: string
+  species_id: string
   name: string
   personality: string
   message: string
@@ -338,6 +339,19 @@ function PetCard({ pet: init }: { pet: Pet }) {
   return (
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
+
+        {/* ── Species link ── */}
+        {pet.species_id && (
+          <div className="mb-3">
+            <Link
+              href={`/species/${pet.species_id}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Ver ficha completa
+            </Link>
+          </div>
+        )}
 
         {/* ── Pet Header ── */}
         <div className="flex items-start gap-4 mb-4">

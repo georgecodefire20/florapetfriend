@@ -41,9 +41,10 @@ const safetyConfig: Record<SafetyLevel, { label: string; color: string; icon: Re
 interface SpeciesCardProps {
   species: SpeciesResult
   index?: number
+  priority?: boolean
 }
 
-export default function SpeciesCard({ species, index = 0 }: SpeciesCardProps) {
+export default function SpeciesCard({ species, index = 0, priority }: SpeciesCardProps) {
   const safety = safetyConfig[species.safety_level] ?? safetyConfig['safe']
 
   return (
@@ -62,6 +63,8 @@ export default function SpeciesCard({ species, index = 0 }: SpeciesCardProps) {
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
+            priority={priority ?? index < 3}
+            loading={priority ?? index < 3 ? 'eager' : 'lazy'}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">

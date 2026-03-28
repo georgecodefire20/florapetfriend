@@ -48,11 +48,45 @@ const features = [
 ]
 
 const steps = [
-  { num: '01', title: 'Sube una imagen o escribe el nombre', icon: '📸' },
-  { num: '02', title: 'La IA identifica la especie', icon: '🤖' },
-  { num: '03', title: 'Explora la ficha completa', icon: '📋' },
-  { num: '04', title: 'Crea tu mini compañero virtual', icon: '🌟' },
-  { num: '05', title: 'Recibe recordatorios automáticos', icon: '⏰' },
+  {
+    num: '01',
+    title: 'Identifica al instante',
+    desc: 'Sube una foto o escribe el nombre. Nuestra IA analiza la especie en segundos y genera una ficha completa con hábitat, dieta, legalidad y cuidados.',
+    icon: '📸',
+    gradient: 'from-brand-500 to-teal-400',
+    bg: 'bg-brand-50',
+    accent: 'text-brand-600',
+    visual: [
+      { label: '🐆 Leopardo', sub: 'Panthera pardus', badge: '94% match', color: 'bg-amber-50 border-amber-200' },
+      { label: '🌵 Cactus Saguaro', sub: 'Carnegiea gigantea', badge: '89% match', color: 'bg-green-50 border-green-200' },
+    ],
+  },
+  {
+    num: '02',
+    title: 'Crea tu compañero virtual',
+    desc: 'Con un clic genera un avatar único con IA, ponle nombre y personalidad. Tu mascota virtual crece contigo y refleja el estado real de sus cuidados.',
+    icon: '🌟',
+    gradient: 'from-purple-500 to-pink-400',
+    bg: 'bg-purple-50',
+    accent: 'text-purple-600',
+    visual: [
+      { label: '🦁 León — Nivel 3', sub: 'Personalidad: valiente y curioso', badge: '😊 98%', color: 'bg-purple-50 border-purple-200' },
+      { label: '🌿 Monstera — Nivel 2', sub: 'Personalidad: tranquila y resiliente', badge: '😊 85%', color: 'bg-pink-50 border-pink-200' },
+    ],
+  },
+  {
+    num: '03',
+    title: 'Cuida y recibe alertas',
+    desc: 'Activa recordatorios automáticos de alimentación, riego y limpieza. Consulta si la especie es legal en tu país y recibe consejos según tu clima.',
+    icon: '⏰',
+    gradient: 'from-earth-500 to-amber-400',
+    bg: 'bg-earth-50',
+    accent: 'text-earth-600',
+    visual: [
+      { label: '🍽️ Alimentación', sub: 'Cada día · 08:00 AM', badge: '✓ Hecho', color: 'bg-green-50 border-green-200' },
+      { label: '💧 Riego', sub: 'Cada 3 días · 07:00 AM', badge: '⏳ Pendiente', color: 'bg-blue-50 border-blue-200' },
+    ],
+  },
 ]
 
 export default function HomePage() {
@@ -130,24 +164,64 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 px-4 bg-white/50">
+      <section className="py-20 px-4 bg-gradient-to-b from-white/50 to-gray-50/80">
         <div className="max-w-5xl mx-auto">
-          <h2 className="section-title text-center mb-4">¿Cómo funciona?</h2>
-          <p className="text-center text-gray-500 mb-12">Cinco pasos simples hacia el cuidado inteligente</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <span className="inline-block bg-brand-100 text-brand-600 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">¿Cómo funciona?</span>
+            <h2 className="text-4xl font-display font-bold text-gray-900 mb-3">Tres pasos hacia el cuidado inteligente</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">De la foto a la ficha completa en segundos. Sin complicaciones, solo resultados.</p>
+          </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {steps.map((step, i) => (
               <motion.div
                 key={step.num}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="card text-center"
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+                className="relative flex flex-col rounded-3xl overflow-hidden border border-gray-100 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="text-4xl mb-3">{step.icon}</div>
-                <div className="text-xs font-bold text-brand-400 mb-2">{step.num}</div>
-                <p className="text-sm font-semibold text-gray-700">{step.title}</p>
+                {/* Step number accent bar */}
+                <div className={`h-1.5 w-full bg-gradient-to-r ${step.gradient}`} />
+
+                {/* Visual mockup area */}
+                <div className={`${step.bg} px-5 pt-5 pb-3`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-xs font-bold uppercase tracking-widest ${step.accent}`}>{step.num}</span>
+                    <span className="text-2xl">{step.icon}</span>
+                  </div>
+                  {/* Mock UI cards inside container */}
+                  <div className="space-y-2">
+                    {step.visual.map((v, vi) => (
+                      <div key={vi} className={`flex items-center justify-between rounded-xl border px-3 py-2 bg-white/80 ${v.color}`}>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-800 leading-tight">{v.label}</p>
+                          <p className="text-xs text-gray-400">{v.sub}</p>
+                        </div>
+                        <span className="text-xs font-bold text-gray-600 bg-white rounded-full px-2 py-0.5 shadow-sm border border-gray-100 whitespace-nowrap ml-2">{v.badge}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Text content */}
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="font-display font-bold text-lg text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+                </div>
+
+                {/* Connecting arrow — hidden on last */}
+                {i < steps.length - 1 && (
+                  <div className="hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-100 rounded-full shadow items-center justify-center text-gray-400 text-sm">
+                    →
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
