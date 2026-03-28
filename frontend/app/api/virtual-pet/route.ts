@@ -111,12 +111,30 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('virtual_pets')
-      .select('*, species(*)')
+      .select('*, species(*), reminders(*)')
       .eq('user_id', user_id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
     return NextResponse.json({ pets: data })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { pet_id, avatar_url } = await req.json()
+    if (!pet_id) return NextResponse.json({ error: 'pet_id requerido' }, { status: 400 })
+
+    const { error } = await supabase
+      .from('virtual_pets')
+      .update({ avatar_url })
+      .eq('id', pet_id)
+
+    if (error) throw error
+    return NextResponse.json({ success: true })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Error interno'
     return NextResponse.json({ error: msg }, { status: 500 })

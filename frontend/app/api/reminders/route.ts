@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       .select('*, virtual_pets(name, species(common_name))')
       .eq('user_id', user_id)
       .eq('active', true)
+      .order('completed', { ascending: true })
       .order('time', { ascending: true })
 
     if (error) throw error
@@ -31,14 +32,28 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, active } = await req.json()
+    const { id, completed, active } = await req.json()
 
-    const { error } = await supabase
-      .from('reminders')
-      .update({ active })
-      .eq('id', id)
+    if (completed !== undefined) {
+      // Mark reminder as completed (stays visible, turns grey)
+      const now = new Date().toISOString()
+      const { data: reminder, error: fetchErr } = await supabase
+        .from('reminders')
+        .update({ completed, completed_at: completed ? now : null })
+        .eq('id', id)
+        .select('pet_id')
+        .single()
+      if (fetchErr) throw fetchErr
+      // Update pet's last_tended_at
+      if (completed && reminder?.pet_id) {
+        await supabase.from('virtual_pets').update({ last_tended_at: now }).eq('id', reminder.pet_id)
+      }
+    } else {
+      // Toggle active (legacy)
+      const { error } = await supabase.from('reminders').update({ active }).eq('id', id)
+      if (error) throw error
+    }
 
-    if (error) throw error
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Error interno'

@@ -11,7 +11,6 @@ const navLinks = [
   { href: '/', label: 'Inicio', icon: Home },
   { href: '/identify', label: 'Identificar', icon: Search },
   { href: '/pets', label: 'Mi Compañero', icon: PawPrint },
-  { href: '/reminders', label: 'Recordatorios', icon: Bell },
   { href: '/explore', label: 'Explorar', icon: Star },
 ]
 
