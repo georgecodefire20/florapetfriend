@@ -3,7 +3,29 @@ import { identifyFromImage, identifyFromText } from '@/lib/ollama'
 import { supabase } from '@/lib/supabase'
 import { slugify } from '@/lib/utils'
 
-async function fetchWikipediaImage(scientificName: string, commonName: string): Promise<string | null> {
+function getParentSpeciesName(scientificName: string): string | null {
+  const parts = scientificName.trim().split(/\s+/)
+  if (parts.length >= 3) return `${parts[0]} ${parts[1]}`
+  return null
+}
+
+async function fetchINaturalistImage(scientificName: string): Promise<string | null> {
+  try {
+    const url = `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&per_page=1`
+    const res = await fetch(url, { headers: { 'User-Agent': 'FloraPetFriend/1.0' } })
+    if (!res.ok) return null
+    const data = await res.json()
+    const taxon = data?.results?.[0]
+    if (!taxon) return null
+    const photo = taxon.default_photo
+    if (!photo) return null
+    return (photo.medium_url ?? photo.url ?? null) as string | null
+  } catch {
+    return null
+  }
+}
+
+async function fetchWikipediaImage(scientificName: string): Promise<string | null> {
   const tryRestSummary = async (title: string) => {
     try {
       const slug = encodeURIComponent(title.trim().replace(/ /g, '_'))
@@ -32,10 +54,17 @@ async function fetchWikipediaImage(scientificName: string, commonName: string): 
     }
   }
 
+  return (await tryRestSummary(scientificName)) ?? (await trySearch(scientificName))
+}
+
+async function fetchSpeciesImage(scientificName: string): Promise<string | null> {
+  const parentName = getParentSpeciesName(scientificName)
+
   return (
-    (await tryRestSummary(scientificName)) ??
-    (await trySearch(scientificName)) ??
-    (await trySearch(commonName))
+    (await fetchINaturalistImage(scientificName)) ??
+    (parentName ? await fetchINaturalistImage(parentName) : null) ??
+    (await fetchWikipediaImage(scientificName)) ??
+    (parentName ? await fetchWikipediaImage(parentName) : null)
   )
 }
 
@@ -71,7 +100,7 @@ export async function POST(req: NextRequest) {
     const savedResults = []
     for (const r of results.slice(0, 3)) {
       const id = slugify(`${r.common_name}-${r.scientific_name}`)
-      const image_url = await fetchWikipediaImage(r.scientific_name, r.common_name)
+      const image_url = await fetchSpeciesImage(r.scientific_name)
 
       await supabase.from('species').upsert({
         id,

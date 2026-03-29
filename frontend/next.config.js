@@ -9,6 +9,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.florapetfriend.site' },
       { protocol: 'https', hostname: 'upload.wikimedia.org' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'inaturalist-open-data.s3.amazonaws.com' },
+      { protocol: 'https', hostname: 'static.inaturalist.org' },
+      { protocol: 'https', hostname: '**.inaturalist.org' },
     ],
   },
   experimental: {

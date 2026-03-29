@@ -52,11 +52,11 @@ function extractJSON(text: string): string {
 export async function identifyFromImage(base64Image: string): Promise<SpeciesIdentification[]> {
   const prompt = `You are an expert biologist and veterinarian. Analyze this image and identify the animal or plant shown.
 Return a JSON array with UP TO 3 possible species matches, ordered by confidence. Each object must have:
-- common_name (string, in Spanish)
-- scientific_name (string)
+- common_name (string, in Spanish) — MUST be the real, widely accepted Spanish common name for the scientific_name given. Do NOT invent or translate incorrectly.
+- scientific_name (string) — MUST be the correct Latin binomial or trinomial that corresponds exactly to the common_name.
 - type ("animal" or "plant")
 - confidence (number 0-1)
-- short_desc (string, 1 sentence in Spanish)
+- short_desc (string, 1 sentence in Spanish describing THIS specific species)
 - is_domestic (boolean)
 - is_legal (boolean, whether it's legal to keep as a pet/plant in most countries)
 - safety_level ("safe", "caution", or "danger")
@@ -65,6 +65,8 @@ Return a JSON array with UP TO 3 possible species matches, ordered by confidence
 - habitat (string in Spanish)
 - care_notes (string in Spanish)
 - legal_notes (string in Spanish)
+
+CRITICAL: The common_name and scientific_name MUST refer to the same organism. Example of correct pairing: "Pez Mariposa Africano" + "Pantodon buchholzi". Example of WRONG pairing: "Pez Globo" + "Pantodon buchholzi" (Pez Globo is Tetraodontidae, not Pantodon). If you are not certain of the common name in Spanish, keep the scientific name and use a literal translation instead of a wrong popular name.
 
 Respond ONLY with the JSON array, no markdown or explanation.`
 
@@ -90,11 +92,11 @@ export async function identifyFromText(query: string): Promise<SpeciesIdentifica
   const prompt = `You are an expert biologist and veterinarian. The user is asking about: "${query}"
 Identify up to 3 possible matching species (animal or plant).
 Return a JSON array with UP TO 3 species, ordered by relevance. Each object must have:
-- common_name (string, in Spanish)
-- scientific_name (string)
+- common_name (string, in Spanish) — MUST be the real, widely accepted Spanish common name for the scientific_name given.
+- scientific_name (string) — MUST be the correct Latin binomial that corresponds exactly to the common_name.
 - type ("animal" or "plant")
 - confidence (number 0-1)
-- short_desc (string, 1 sentence in Spanish)
+- short_desc (string, 1 sentence in Spanish describing THIS specific species)
 - is_domestic (boolean)
 - is_legal (boolean)
 - safety_level ("safe", "caution", or "danger")
@@ -103,6 +105,8 @@ Return a JSON array with UP TO 3 species, ordered by relevance. Each object must
 - habitat (string in Spanish)
 - care_notes (string in Spanish)
 - legal_notes (string in Spanish)
+
+CRITICAL: The common_name and scientific_name MUST refer to the same organism. Do NOT pair a popular common name with an unrelated scientific name. If uncertain of the Spanish common name, use a literal translation of the scientific name rather than a wrong popular name.
 
 Respond ONLY with the JSON array.`
 
