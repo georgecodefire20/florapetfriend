@@ -273,10 +273,10 @@ function ImageModal({ pet, onClose, onSaved }: {
               type="text"
               value={seed}
               onChange={e => setSeed(e.target.value)}
-              placeholder="Semilla (nombre o palabra)"
+              placeholder="Descripción de tu mascota"
               className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
             />
-            <p className="text-xs text-gray-400 text-center">Cambia la semilla para generar variaciones únicas</p>
+            <p className="text-xs text-gray-400 text-center">Cambia la descripción para cambiar la imagen</p>
           </div>
         )}
 
