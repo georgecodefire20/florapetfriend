@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plus, Search, Lock, Sparkles, Camera, Wand2, Upload,
+  Plus, Search, Lock, Sparkles, Camera, Upload,
   X, CheckCircle, XCircle, ChevronDown, ChevronUp, Loader2,
   Pencil, PawPrint, Leaf, ExternalLink, Trash2,
 } from 'lucide-react'
@@ -153,6 +153,21 @@ function DeleteConfirmModal({ petName, onConfirm, onCancel, deleting }: {
   )
 }
 
+// ─── DiceBear Styles ─────────────────────────────────────────────────────────
+
+const DICEBEAR_STYLES = [
+  { id: 'thumbs',       label: '😊 Kawaii' },
+  { id: 'fun-emoji',    label: '🎉 Emoji' },
+  { id: 'adventurer',   label: '🧑 Aventura' },
+  { id: 'bottts',       label: '🤖 Robot' },
+  { id: 'pixel-art',    label: '👾 Pixel' },
+  { id: 'lorelei',      label: '✨ Lorelei' },
+]
+
+function dicebearUrl(style: string, seed: string) {
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}&size=200`
+}
+
 // ─── Image Modal ──────────────────────────────────────────────────────────────
 
 function ImageModal({ pet, onClose, onSaved }: {
@@ -160,38 +175,24 @@ function ImageModal({ pet, onClose, onSaved }: {
   onClose: () => void
   onSaved: (url: string) => void
 }) {
-  const [tab, setTab] = useState<'ai' | 'upload'>('ai')
+  const [tab, setTab] = useState<'avatar' | 'upload'>('avatar')
+  const [selectedStyle, setSelectedStyle] = useState(DICEBEAR_STYLES[0].id)
+  const [seed, setSeed] = useState(pet.name)
   const [preview, setPreview] = useState<string | null>(pet.avatar_url)
-  const [aiPrompt, setAiPrompt] = useState('')
-  const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (tab === 'avatar') {
+      setPreview(dicebearUrl(selectedStyle, seed || pet.name))
+    }
+  }, [selectedStyle, seed, tab])
 
   const handleFile = async (e: { target: HTMLInputElement }) => {
     const file = e.target.files?.[0]
     if (!file) return
     const resized = await resizeImage(file)
     setPreview(resized)
-  }
-
-  const handleGenerate = async () => {
-    if (!aiPrompt.trim()) return
-    setGenerating(true)
-    setPreview(null)
-    try {
-      const res = await fetch('/api/generate-pet-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt }),
-      })
-      const data = await res.json()
-      if (!res.ok) { toast.error(data.error); return }
-      setPreview(data.imageUrl)
-    } catch {
-      toast.error('Error generando imagen. Intenta de nuevo.')
-    } finally {
-      setGenerating(false)
-    }
   }
 
   const handleSave = async () => {
@@ -230,48 +231,52 @@ function ImageModal({ pet, onClose, onSaved }: {
         </div>
 
         <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">
-          {(['ai', 'upload'] as const).map(t => (
+          {(['avatar', 'upload'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${tab === t ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-500'}`}
             >
-              {t === 'ai' ? <><Wand2 className="w-3.5 h-3.5" />Generar con IA</> : <><Upload className="w-3.5 h-3.5" />Subir foto</>}
+              {t === 'avatar' ? <><Sparkles className="w-3.5 h-3.5" />Elegir avatar</> : <><Upload className="w-3.5 h-3.5" />Subir foto</>}
             </button>
           ))}
         </div>
 
-        {(preview || generating) && (
-          <div className="mb-4 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center h-48">
-            {generating ? (
-              <div className="flex flex-col items-center gap-2 text-gray-500">
-                <Loader2 className="w-10 h-10 text-brand-400 animate-spin" />
-                <p className="text-xs font-medium">Generando imagen con IA...</p>
-              </div>
-            ) : (
-              <img
-                src={preview!}
-                alt="Preview"
-                className="h-full w-full object-contain"
-                onError={() => { setPreview(null); toast.error('No se pudo cargar la imagen. Intenta de nuevo.') }}
-              />
-            )}
+        {preview && (
+          <div className="mb-4 rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center h-48">
+            <img
+              src={preview}
+              alt="Preview"
+              className="h-full w-full object-contain"
+              onError={() => { setPreview(null); toast.error('No se pudo cargar la imagen.') }}
+            />
           </div>
         )}
 
-        {tab === 'ai' && (
+        {tab === 'avatar' && (
           <div className="space-y-3">
-            <div>
-              <textarea value={aiPrompt} onChange={e => setAiPrompt(e.target.value)}
-                placeholder="Ej: un gatito naranja con ojos brillantes y orejas puntiagudas"
-                rows={3}
-                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm resize-none"
-              />
-              <p className="text-xs text-amber-600 mt-1">⚠️ Solo animales y plantas. Sin humanos, violencia ni contenido adulto.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {DICEBEAR_STYLES.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedStyle(s.id)}
+                  className={`p-2 rounded-xl text-xs font-semibold transition-all border-2 ${selectedStyle === s.id ? 'border-brand-400 bg-brand-50 text-brand-700' : 'border-gray-100 hover:border-gray-200 text-gray-600'}`}
+                >
+                  <img
+                    src={dicebearUrl(s.id, seed || pet.name)}
+                    alt={s.label}
+                    className="w-12 h-12 mx-auto mb-1 rounded-lg"
+                  />
+                  {s.label}
+                </button>
+              ))}
             </div>
-            <button onClick={handleGenerate} disabled={generating || !aiPrompt.trim()}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {generating ? <><Loader2 className="w-4 h-4 animate-spin" />Generando...</> : <><Wand2 className="w-4 h-4" />Generar imagen</>}
-            </button>
+            <input
+              type="text"
+              value={seed}
+              onChange={e => setSeed(e.target.value)}
+              placeholder="Semilla (nombre o palabra)"
+              className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
+            />
+            <p className="text-xs text-gray-400 text-center">Cambia la semilla para generar variaciones únicas</p>
           </div>
         )}
 
@@ -287,7 +292,7 @@ function ImageModal({ pet, onClose, onSaved }: {
         )}
 
         {preview && (
-          <button onClick={handleSave} disabled={saving || generating}
+          <button onClick={handleSave} disabled={saving}
             className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
           >
             {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</> : <><CheckCircle className="w-4 h-4" />Guardar imagen</>}
