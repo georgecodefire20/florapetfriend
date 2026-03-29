@@ -172,8 +172,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-14"
           >
-            <span className="inline-block bg-brand-100 text-brand-600 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">¿Cómo funciona?</span>
-            <h2 className="text-4xl font-display font-bold text-gray-900 mb-3">Tres pasos hacia el cuidado inteligente</h2>
+            <span className="inline-block bg-brand-100 text-brand-600 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4 badge-glow">¿Cómo funciona?</span>
+            <h2 className="text-4xl font-display font-bold mb-3">
+              <span className="animated-title">Tres pasos hacia el cuidado inteligente</span>
+            </h2>
             <p className="text-gray-500 max-w-xl mx-auto">De la foto a la ficha completa en segundos. Sin complicaciones, solo resultados.</p>
           </motion.div>
 
@@ -188,13 +190,13 @@ export default function HomePage() {
                 className="relative flex flex-col rounded-3xl overflow-hidden border border-gray-100 bg-white shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
                 {/* Step number accent bar */}
-                <div className={`h-1.5 w-full bg-gradient-to-r ${step.gradient}`} />
+                <div className={`h-1.5 w-full bg-gradient-to-r shimmer-bar ${step.gradient}`} />
 
                 {/* Visual mockup area */}
                 <div className={`${step.bg} px-5 pt-5 pb-3`}>
                   <div className="flex items-center justify-between mb-3">
                     <span className={`text-xs font-bold uppercase tracking-widest ${step.accent}`}>{step.num}</span>
-                    <span className="text-2xl">{step.icon}</span>
+                    <span className="text-2xl animate-float inline-block">{step.icon}</span>
                   </div>
                   {/* Mock UI cards inside container */}
                   <div className="space-y-2">
@@ -212,7 +214,9 @@ export default function HomePage() {
 
                 {/* Text content */}
                 <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-display font-bold text-lg text-gray-900 mb-2">{step.title}</h3>
+                  <h3 className="font-display font-bold text-lg mb-2">
+                    <span className="animated-title">{step.title}</span>
+                  </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
                 </div>
 
@@ -231,7 +235,9 @@ export default function HomePage() {
       {/* Features */}
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="section-title text-center mb-4">Todo lo que necesitas</h2>
+          <h2 className="section-title text-center mb-4">
+            <span className="animated-title">Todo lo que necesitas</span>
+          </h2>
           <p className="text-center text-gray-500 mb-12">Potenciado por IA, pensado para ti</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
