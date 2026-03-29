@@ -43,8 +43,8 @@ export default function AuthPage() {
     const { error } = await signUp(email, password, name, country)
     setLoading(false)
     if (error) { toast.error(error); return }
-    toast.success('¡Cuenta creada! Revisa tu email para confirmar.')
-    setTab('login')
+    localStorage.setItem('fpf_show_welcome', '1')
+    router.push('/identify')
   }
 
   const quickLogin = async (creds: typeof DEMO_USER) => {
