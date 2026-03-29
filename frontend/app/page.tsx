@@ -52,40 +52,28 @@ const steps = [
     num: '01',
     title: 'Identifica al instante',
     desc: 'Sube una foto o escribe el nombre. Nuestra IA analiza la especie en segundos y genera una ficha completa con hábitat, dieta, legalidad y cuidados.',
-    icon: '📸',
+    icon: '�',
     gradient: 'from-brand-500 to-teal-400',
     bg: 'bg-brand-50',
     accent: 'text-brand-600',
-    visual: [
-      { label: '🐆 Leopardo', sub: 'Panthera pardus', badge: '94% match', color: 'bg-amber-50 border-amber-200' },
-      { label: '🌵 Cactus Saguaro', sub: 'Carnegiea gigantea', badge: '89% match', color: 'bg-green-50 border-green-200' },
-    ],
   },
   {
     num: '02',
     title: 'Crea tu compañero virtual',
     desc: 'Con un clic genera un avatar único con IA, ponle nombre y personalidad. Tu mascota virtual crece contigo y refleja el estado real de sus cuidados.',
-    icon: '🌟',
+    icon: '🐾',
     gradient: 'from-purple-500 to-pink-400',
     bg: 'bg-purple-50',
     accent: 'text-purple-600',
-    visual: [
-      { label: '🦁 León — Nivel 3', sub: 'Personalidad: valiente y curioso', badge: '😊 98%', color: 'bg-purple-50 border-purple-200' },
-      { label: '🌿 Monstera — Nivel 2', sub: 'Personalidad: tranquila y resiliente', badge: '😊 85%', color: 'bg-pink-50 border-pink-200' },
-    ],
   },
   {
     num: '03',
     title: 'Cuida y recibe alertas',
     desc: 'Activa recordatorios automáticos de alimentación, riego y limpieza. Consulta si la especie es legal en tu país y recibe consejos según tu clima.',
-    icon: '⏰',
+    icon: '🔔',
     gradient: 'from-earth-500 to-amber-400',
     bg: 'bg-earth-50',
     accent: 'text-earth-600',
-    visual: [
-      { label: '🍽️ Alimentación', sub: 'Cada día · 08:00 AM', badge: '✓ Hecho', color: 'bg-green-50 border-green-200' },
-      { label: '💧 Riego', sub: 'Cada 3 días · 07:00 AM', badge: '⏳ Pendiente', color: 'bg-blue-50 border-blue-200' },
-    ],
   },
 ]
 
@@ -192,24 +180,10 @@ export default function HomePage() {
                 {/* Step number accent bar */}
                 <div className={`h-1.5 w-full bg-gradient-to-r shimmer-bar ${step.gradient}`} />
 
-                {/* Visual mockup area */}
-                <div className={`${step.bg} px-5 pt-5 pb-3`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold uppercase tracking-widest ${step.accent}`}>{step.num}</span>
-                    <span className="text-2xl animate-float inline-block">{step.icon}</span>
-                  </div>
-                  {/* Mock UI cards inside container */}
-                  <div className="space-y-2">
-                    {step.visual.map((v, vi) => (
-                      <div key={vi} className={`flex items-center justify-between rounded-xl border px-3 py-2 bg-white/80 ${v.color}`}>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-800 leading-tight">{v.label}</p>
-                          <p className="text-xs text-gray-400">{v.sub}</p>
-                        </div>
-                        <span className="text-xs font-bold text-gray-600 bg-white rounded-full px-2 py-0.5 shadow-sm border border-gray-100 whitespace-nowrap ml-2">{v.badge}</span>
-                      </div>
-                    ))}
-                  </div>
+                {/* Visual area */}
+                <div className={`${step.bg} px-5 pt-5 pb-5 flex flex-col items-center justify-center`}>
+                  <span className={`text-xs font-bold uppercase tracking-widest ${step.accent} self-start mb-4`}>{step.num}</span>
+                  <span className="text-7xl animate-float inline-block">{step.icon}</span>
                 </div>
 
                 {/* Text content */}
