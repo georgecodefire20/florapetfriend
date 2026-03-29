@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Leaf, PawPrint, Sparkles, Camera, Search, ArrowRight, Shield, Clock, Globe } from 'lucide-react'
 import Link from 'next/link'
 import IdentifyForm from '@/components/IdentifyForm'
+import { useAuth } from '@/lib/auth'
 
 const features = [
   {
@@ -79,6 +80,7 @@ const steps = [
 
 export default function HomePage() {
   const [showForm, setShowForm] = useState(false)
+  const { user } = useAuth()
 
   return (
     <div className="min-h-screen">
@@ -121,10 +123,12 @@ export default function HomePage() {
               <Sparkles className="w-5 h-5" />
               Pruébalo ahora
             </button>
-            <Link href="/auth" className="btn-secondary text-lg flex items-center gap-2 justify-center">
-              Crear cuenta gratis
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+            {!user && (
+              <Link href="/auth" className="btn-secondary text-lg flex items-center gap-2 justify-center">
+                Crear cuenta gratis
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            )}
           </div>
         </motion.div>
 
@@ -236,6 +240,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
+      {!user && (
       <section className="py-20 px-4 text-center">
         <div className="max-w-2xl mx-auto">
           <div className="card bg-gradient-to-br from-brand-500 to-brand-600 text-white mb-6">
@@ -258,6 +263,7 @@ export default function HomePage() {
           <p className="text-xs text-gray-400">Acceso rápido demo: <strong>demo@florapetfriend.site</strong> / <strong>demo1234</strong></p>
         </div>
       </section>
+      )}
 
       {/* Footer */}
       <footer className="py-8 px-4 text-center text-sm text-gray-400 border-t border-gray-100">
