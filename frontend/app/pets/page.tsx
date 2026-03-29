@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Lock, Sparkles, Camera, Wand2, Upload,
   X, CheckCircle, XCircle, ChevronDown, ChevronUp, Loader2,
-  Pencil, PawPrint, Leaf, ExternalLink,
+  Pencil, PawPrint, Leaf, ExternalLink, Trash2,
 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -106,6 +106,52 @@ async function resizeImage(file: File, size = 400): Promise<string> {
 const TYPE_EMOJI: Record<string, string> = { animal: '🐾', plant: '🌿' }
 const REM_ICON: Record<string, string> = { food: '🍽️', water: '💧', sun: '☀️', cleaning: '🧹', other: '📋' }
 const FREQ_LABELS = { daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual' } as const
+
+// ─── Delete Confirm Modal ────────────────────────────────────────────────────
+
+function DeleteConfirmModal({ petName, onConfirm, onCancel, deleting }: {
+  petName: string
+  onConfirm: () => void
+  onCancel: () => void
+  deleting: boolean
+}) {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
+      >
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mb-1">
+            <Trash2 className="w-7 h-7 text-red-500" />
+          </div>
+          <h3 className="font-display font-bold text-xl text-gray-900">¿Eliminar compañero?</h3>
+          <p className="text-sm text-gray-500">
+            ¿Realmente deseas eliminar a{' '}
+            <span className="font-semibold text-gray-700">{petName}</span>?
+            {' '}Esta acción no se puede deshacer.
+          </p>
+          <div className="flex gap-3 w-full mt-2">
+            <button onClick={onCancel} disabled={deleting}
+              className="flex-1 py-2.5 rounded-2xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button onClick={onConfirm} disabled={deleting}
+              className="flex-1 py-2.5 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {deleting
+                ? <><Loader2 className="w-4 h-4 animate-spin" />Eliminando...</>
+                : <><Trash2 className="w-4 h-4" />Eliminar</>}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
 
 // ─── Image Modal ──────────────────────────────────────────────────────────────
 
@@ -282,9 +328,11 @@ function ReminderItem({ reminder, onToggle }: {
 
 // ─── Pet Card ─────────────────────────────────────────────────────────────────
 
-function PetCard({ pet: init }: { pet: Pet }) {
+function PetCard({ pet: init, onDelete }: { pet: Pet; onDelete: (id: string) => void }) {
   const [pet, setPet] = useState(init)
   const [showImgModal, setShowImgModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [freqTab, setFreqTab] = useState<'daily' | 'weekly' | 'monthly'>('daily')
   const [expanded, setExpanded] = useState(false)
   const [editingName, setEditingName] = useState(false)
@@ -320,6 +368,20 @@ function PetCard({ pet: init }: { pet: Pet }) {
 
   const tabReminders = [...(grouped[freqTab])].sort((a, b) => Number(a.completed) - Number(b.completed))
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/virtual-pet?pet_id=${pet.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      toast.success(`${pet.name} ha sido eliminado`)
+      onDelete(pet.id)
+    } catch {
+      toast.error('Error al eliminar compañero')
+      setDeleting(false)
+      setShowDeleteModal(false)
+    }
+  }
+
   const handleToggle = async (id: string, completed: boolean) => {
     const now = new Date().toISOString()
     setPet(prev => ({
@@ -340,18 +402,25 @@ function PetCard({ pet: init }: { pet: Pet }) {
     <>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
 
-        {/* ── Species link ── */}
-        {pet.species_id && (
-          <div className="mb-3">
+        {/* ── Top bar: species link + delete ── */}
+        <div className="flex items-center justify-between mb-3">
+          {pet.species_id ? (
             <Link
               href={`/species/${pet.species_id}`}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-xl transition-colors"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Ver ficha completa
             </Link>
-          </div>
-        )}
+          ) : <span />}
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+            title="Eliminar compañero"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* ── Pet Header ── */}
         <div className="flex items-start gap-4 mb-4">
@@ -529,6 +598,17 @@ function PetCard({ pet: init }: { pet: Pet }) {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <DeleteConfirmModal
+            petName={pet.name}
+            deleting={deleting}
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   )
 }
@@ -608,7 +688,13 @@ export default function PetsPage() {
           </motion.div>
         ) : (
           <div className="flex flex-col gap-6">
-            {pets.map(pet => <PetCard key={pet.id} pet={pet} />)}
+            {pets.map(pet => (
+              <PetCard
+                key={pet.id}
+                pet={pet}
+                onDelete={id => setPets(prev => prev.filter(p => p.id !== id))}
+              />
+            ))}
           </div>
         )}
       </div>

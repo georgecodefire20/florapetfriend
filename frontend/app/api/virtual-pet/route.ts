@@ -123,6 +123,24 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const pet_id = searchParams.get('pet_id')
+    if (!pet_id) return NextResponse.json({ error: 'pet_id requerido' }, { status: 400 })
+
+    await supabase.from('reminders').delete().eq('pet_id', pet_id)
+
+    const { error } = await supabase.from('virtual_pets').delete().eq('id', pet_id)
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error interno'
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const { pet_id, avatar_url, name } = await req.json()
