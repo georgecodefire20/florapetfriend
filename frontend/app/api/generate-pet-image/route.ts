@@ -32,33 +32,37 @@ export async function POST(req: NextRequest) {
 
     const encoded = encodeURIComponent(safePrompt)
     const seed = Math.floor(Math.random() * 99999)
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=400&seed=${seed}&model=flux&enhance=false`
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?width=400&height=400&seed=${seed}&nologo=true`
 
-    // Fetch server-side with manual AbortController (Node 14+ compatible)
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 35_000)
-    let imgRes: Response
-    try {
-      imgRes = await fetch(pollinationsUrl, {
-        signal: controller.signal,
-        headers: {
-          'Referer': 'https://florapetfriend.site',
-          'Origin': 'https://florapetfriend.site',
-          'User-Agent': 'Mozilla/5.0 (compatible; FloraPetFriend/1.0)',
-        },
-      })
-    } catch (fetchErr: unknown) {
-      clearTimeout(timer)
-      const msg = fetchErr instanceof Error && fetchErr.name === 'AbortError'
-        ? 'La generación tardó demasiado. Intenta de nuevo.'
-        : 'No se pudo conectar al generador de imágenes.'
-      return NextResponse.json({ error: msg }, { status: 500 })
+    // Fetch server-side with retry logic
+    let imgRes: Response | null = null
+    let lastError = ''
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 45_000)
+      try {
+        imgRes = await fetch(pollinationsUrl, {
+          signal: controller.signal,
+          redirect: 'follow',
+        })
+        clearTimeout(timer)
+        if (imgRes.ok) break
+        lastError = `código ${imgRes.status}`
+        imgRes = null
+      } catch (fetchErr: unknown) {
+        clearTimeout(timer)
+        if (fetchErr instanceof Error && fetchErr.name === 'AbortError') {
+          lastError = 'La generación tardó demasiado'
+        } else {
+          lastError = 'No se pudo conectar al generador de imágenes'
+        }
+        imgRes = null
+      }
     }
-    clearTimeout(timer)
 
-    if (!imgRes.ok) {
+    if (!imgRes || !imgRes.ok) {
       return NextResponse.json(
-        { error: `Error al generar imagen (código ${imgRes.status}). Intenta con otro prompt.` },
+        { error: `Error al generar imagen (${lastError}). Intenta con otro prompt.` },
         { status: 500 }
       )
     }
